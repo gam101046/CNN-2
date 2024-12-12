@@ -4,9 +4,9 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
 
 # Define paths to your directories
-train_dir = '/Users/gam/Desktop/DEEP/CNN/DATASET/train'
-val_dir = '/Users/gam/Desktop/DEEP/CNN/DATASET/val'
-test_dir = '/Users/gam/Desktop/DEEP/CNN/DATASET/test'
+train_dir = '/Users/gam/Desktop/DEEP/CNN/DATASET/Splitted_dataset/train'
+val_dir = '/Users/gam/Desktop/DEEP/CNN/DATASET/Splitted_dataset/val'
+test_dir = '/Users/gam/Desktop/DEEP/CNN/DATASET/Splitted_dataset/test'
 
 # Set up ImageDataGenerators
 train_datagen = ImageDataGenerator(rescale=1.0/255.0)
@@ -48,7 +48,7 @@ model = Sequential([
     Flatten(),
     Dense(128, activation='relu'),
     Dropout(0.5),
-    Dense(4, activation='softmax')  # 4 classes: glioma, meningioma, normal, pituitary
+    Dense(3, activation='softmax')  # 4 classes: glioma, meningioma, normal, pituitary
 ])
 
 model.compile(optimizer='adam',
@@ -60,7 +60,10 @@ model.summary()
 
 history = model.fit(
     train_generator,
-    epochs=10,
+    epochs=2,
     validation_data=val_generator
 )
 
+test_loss, test_acc = model.evaluate(test_generator)
+print(f"Test accuracy: {test_acc * 100:.2f}%")
+model.save('cnn_model.h5')

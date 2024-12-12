@@ -5,18 +5,25 @@ import numpy as np
 
 app = Flask(__name__)
 
-# โหลดโมเดล CNN
-model = tf.keras.models.load_model("path_to_your_model.h5")
+# โหลดโมเดล CNN ที่ได้รับการฝึกใหม่
+model = tf.keras.models.load_model("/Users/gam/Desktop/DEEP/CNN/cnn_model.h5")  # ใช้เส้นทางของโมเดลใหม่
 
-# ฟังก์ชันสำหรับทำนายการง่วง
-def predict_drowsiness(frame):
-    resized_frame = cv2.resize(frame, (64, 64))  # ขนาดภาพที่โมเดลรองรับ
+# ฟังก์ชันสำหรับทำนายสถานะ
+def predict_status(frame):
+    resized_frame = cv2.resize(frame, (128, 128))  # ขนาดภาพที่โมเดลรองรับ
     normalized_frame = resized_frame / 255.0  # ปรับค่าสีให้อยู่ในช่วง [0,1]
     input_data = np.expand_dims(normalized_frame, axis=0)  # เพิ่มมิติ
     prediction = model.predict(input_data)
-    return prediction[0][0]  # ผลลัพธ์ของโมเดล
 
-# ฟีดกล้อง
+    # ทำนายผลลัพธ์จากโมเดล (ค่าผลลัพธ์ของโมเดลมี 3 คลาส: Alert, Drowsy, Mobile)
+    if prediction[0][0] > 0.5:
+        return "Alert"
+    elif prediction[0][1] > 0.5:
+        return "Drowsy"
+    else:
+        return "Mobile"
+
+# ฟังก์ชันสำหรับส่งข้อมูลภาพจากกล้อง
 def gen_frames():
     camera = cv2.VideoCapture(0)  # เปิดกล้อง
     while True:
@@ -24,11 +31,19 @@ def gen_frames():
         if not success:
             break
         else:
-            # เพิ่มกล่องข้อความแสดงสถานะการง่วง
-            prediction = predict_drowsiness(frame)
-            status = "Drowsy" if prediction > 0.5 else "Alert"
-            cv2.putText(frame, f"Status: {status}", (10, 30),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            # ทำนายสถานะ
+            status = predict_status(frame)
+            
+            # เพิ่มกล่องข้อความแสดงสถานะ
+            if status == "Alert":
+                cv2.putText(frame, "Status: Alert", (50, 50),
+                            cv2.FONT_HERSHEY_DUPLEX, 1.5, (0, 255, 0), 3)
+            elif status == "Drowsy":
+                cv2.putText(frame, "Status: Drowsy", (50, 50),
+                            cv2.FONT_HERSHEY_DUPLEX, 1.5, (0, 0, 255), 3)
+            else:
+                cv2.putText(frame, "Status: Mobile", (50, 50),
+                            cv2.FONT_HERSHEY_DUPLEX, 1.5, (255, 0, 0), 3)
 
             # ส่งเฟรมไปยัง frontend
             ret, buffer = cv2.imencode('.jpg', frame)
@@ -38,11 +53,11 @@ def gen_frames():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html')  # หน้า HTML ที่จะแสดงผล
 
 @app.route('/video_feed')
 def video_feed():
     return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5001)  # เปิดให้เข้าถึงจากทุกอุปกรณ์ในเครือข่ายเดียวกัน
