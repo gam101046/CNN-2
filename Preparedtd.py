@@ -23,7 +23,7 @@
 # print("All classes will be augmented to:", max_images)
 
 # # กำหนดเส้นทางของชุดข้อมูลที่ได้จากการเพิ่มรูปภาพ (Augmented dataset)
-# augmented_dataset_path = '/Users/gam/Desktop/DEEP/CNN/DATASET'  # เส้นทางไปยังชุดข้อมูลที่เพิ่มรูปภาพแล้ว
+# augmented_dataset_path = '/Users/gam/Desktop/DEEP/CNN/DATASET/Augmented_dataset'  # เส้นทางไปยังชุดข้อมูลที่เพิ่มรูปภาพแล้ว
 # output_path = '/Users/gam/Desktop/DEEP/CNN/DATASET/Splitted_dataset'  # เส้นทางที่เก็บชุดข้อมูลที่แบ่งแล้ว
 # os.makedirs(output_path, exist_ok=True)
 
@@ -105,18 +105,20 @@ def predict_status(image_path):
     # เพิ่มมิติให้กับข้อมูล (เพื่อให้เข้ากับอินพุตของโมเดล)
     input_data = np.expand_dims(normalized_image, axis=0)  # เพิ่มมิติ
     prediction = model.predict(input_data)
+    print(prediction)
     
     # ทำนายสถานะ (คาดว่าโมเดลมี 3 คลาส: Alert, Drowsy, Mobile)
     if prediction[0][0] > 0.5:
-        return "Alert"
-    elif prediction[0][1] > 0.5:
         return "Drowsy"
+    elif prediction[0][1] > 0.5:
+        return "Non Drowsy"
     else:
-        return "Mobile"
+        return "Use Mobile phone"
 
 # ระบุเส้นทางของรูปภาพที่ต้องการทดสอบ
-image_path = "/Users/gam/Desktop/c0056.png"
+image_path = "/Users/gam/Desktop/aug_0_187.jpeg"
 
 # ทำนายสถานะจากรูปภาพ
 status = predict_status(image_path)
 print(f"Prediction for the image: {status}")
+
