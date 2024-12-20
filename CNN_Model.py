@@ -75,7 +75,7 @@ early_stopping = EarlyStopping(monitor='val_loss', patience=3, restore_best_weig
 # Train the model with early stopping
 history = model.fit(
     train_generator,
-    epochs=32,
+    epochs=20,
     validation_data=val_generator,
     callbacks=[early_stopping]  # Early stopping to avoid overfitting
 )
